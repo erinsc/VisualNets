@@ -3,7 +3,7 @@ OBJ_DIR := obj
 
 CC := g++
 
-CFLAGS :=  -std=c++17 -O2 -MMD -MP -W -Wall -Wextra -I $(SRC_DIR)
+CFLAGS :=  -std=c++17 -O2 -MMD -MP -W -Wall -Wextra -I $(SRC_DIR) -g
 LFLAGS :=  -l raylib
 
 TARGET := VisualNets

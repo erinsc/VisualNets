@@ -1,5 +1,7 @@
 #include "lambda_net.h"
 #include "renderer.h"
+#include "animator.h"
+#include "reducer.h"
 
 int main() {
     int display = GetCurrentMonitor();
@@ -7,35 +9,58 @@ int main() {
 
     InitWindow(screensize.x, screensize.y, "LambdaNets");
 
-    Camera2D camera = {};
-    camera.zoom = 1.f;
-    camera.offset = (Vector2){ screensize.x/2.0f, screensize.y/2.0f };
-    camera.target = (Vector2){ screensize.x, screensize.y };
-
     SetTargetFPS(60);
 
     Net net;
-    Renderer renderer;
+    Renderer renderer(screensize);
+    Animator animator;
+    Reducer reducer;
 
-    net.symbols.emplace_back(RED, 1, L'a');
-    net.symbols.emplace_back(GREEN, 2, L'g');
-    net.symbols.emplace_back(BLUE, 3, L'e');
+    net.symbols.emplace_back(SKYBLUE, 1, L'e');
+    net.symbols.emplace_back(GREEN, 3, L'g');
+    net.symbols.emplace_back(RED, 3, L'd');
 
-    net.nodes[0] = {{200, 200}, {0,0}, 0, 0, 2};
-    net.nodes[1] = {{200, 400}, {0,0}, 0, 0, 1};
-    net.nodes[2] = {{200, 600}, {0,0}, 0, 0, 0};
-    net.nodes[3] = {{600, 600}, {0,0}, 0, 0, 0};
-    net.nodes[4] = {{400, 600}, {0,0}, 0, 0, 0};
+    net.insert_node({{200, 200}, {0,0}, 0, 0, 0});
+    net.insert_node({{200, 600}, {0,0}, 0, 0, 0});
+    net.insert_node({{600, 200}, {0,0}, 0, 0, 1});
+    net.insert_node({{600, 600}, {0,0}, 0, 0, 2});
 
-    net.edges.insert({0, 3, 0, 0});
-    net.edges.insert({0, 4, 1, 0});
-    net.edges.insert({0, 1, 2, 0});
-    net.edges.insert({1, 2, 1, 0});
+    net.edges.insert({(Port){0, 0}, (Port){2, 1}});
+    net.edges.insert({(Port){1, 0}, (Port){3, 2}});
+    net.edges.insert({(Port){2, 0}, (Port){3, 0}});
+    net.edges.insert({(Port){2, 2}, (Port){3, 1}});
 
+
+    RedRule ee = {}; // E() >< E()
+    RedRule eg = {false, symbolid_t{0}, symbolid_t{0}}; // E() >< G(E(), E())
+    RedRule ed = {false, symbolid_t{0}, symbolid_t{0}}; // E() >< D(E(), E())
+
+    RedRule gg = {portid_t{1}, portid_t{2}, false, portid_t{2}, portid_t{1}}; // G(1,2) >< G(2,1)
+
+    // G(D(1,2), D(3,4)) >< D(G(1,3), G(2,4))
+    RedRule gd = {
+        symbolid_t{2}, portid_t{1}, portid_t{2},
+        symbolid_t{2}, portid_t{3}, portid_t{4},
+        false,
+        symbolid_t{1}, portid_t{1}, portid_t{3},
+        symbolid_t{1}, portid_t{2}, portid_t{4}
+    };
+
+    RedRule dd = {portid_t{1}, portid_t{2}, false, portid_t{1}, portid_t{2}}; // G(1,2) >< G(1,2)
+
+    reducer.reductions[{0, 0}] = ee;
+    reducer.reductions[{0, 1}] = eg;
+    reducer.reductions[{0, 2}] = ed;
+
+    reducer.reductions[{1, 1}] = gg;
+    reducer.reductions[{1, 2}] = gd;
+    reducer.reductions[{2, 2}] = dd;
 
     while (!WindowShouldClose()) {
+        renderer.control_camera();
+
         BeginDrawing();
-        BeginMode2D(camera);
+        BeginMode2D(renderer.camera);
 
         ClearBackground(RAYWHITE);
         renderer.draw_net(net);
@@ -43,7 +68,9 @@ int main() {
         EndMode2D();
         EndDrawing();
 
-        net.nodes[0].angle += 0.01;
-        net.nodes[1].angle += 0.02;
+        animator.step_net(net);
+
+        //reducer.reduce_net(net);
+
     }
 }
