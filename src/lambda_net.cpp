@@ -1,34 +1,33 @@
 #include "lambda_net.h"
 
-nodeid_t Net::insert_node(const Node &node) {
-    nodes[id_counter] = node;
-    return id_counter++;
+nodeid_t Net::add_node(Vector2 position, float angle, symbolid_t symbol) {
+    portid_t ports = symbols[symbol].ports;
+    return nodes.push(Node(position, {0, 0}, angle, 0, ports, symbol));
 }
-template <typename ...Ts>
-nodeid_t Net::emplace_node(Ts &&...args) {
-    nodes[id_counter] = {std::forward<Ts>(args)...};
-    return id_counter++;
+void Net::add_edge(Port from, Port to) {
+    nodes[from.nodeid].ports[from.portid] = to;
+    nodes[to.nodeid].ports[to.portid] = from;
 }
 
-std::pair<Vector2, Vector2> get_port_offsets(const Node &node, portid_t port, const Net &net) {
+Vector2 port_position(Port port, const Net &net) {
+    const Node &node = net.nodes.at(port.nodeid);
     portid_t ports = net.symbols[node.symbol].ports;
 
     Vector2 offset;
-    float angle;
-    if (ports == 1) {
+    if (ports == 1)
         offset = {CRC_TRG_RATIO, 0};
-        angle = node.angle;
-    }
-    else if (port == 0){
+    else if (port.portid == 0)
         offset = {1, 0};
-        angle = node.angle;
-    }
-    else {
-        offset = {1.f/2, 2.f * port / ports - 1};
-        angle = node.angle + PI;
-    }
-    Vector2 point = Vector2Rotate(offset, angle) * Node::radius + node.position;
-    Vector2 dir = Vector2Rotate({1,0}, angle);
+    else
+        offset = {-0.5f, 1 - 2.f * port.portid / ports};
 
-    return {point, dir};
+    return Vector2Rotate(offset, node.angle) * NODE_RADIUS + node.position;
+}
+
+Vector2 port_direction(Port port, const Net &net) {
+    float angle = net.nodes.at(port.nodeid).angle;
+
+    if (port.portid == 0)
+        return Vector2Rotate({1,0}, angle);
+    return Vector2Rotate({-1,0}, angle);
 }
