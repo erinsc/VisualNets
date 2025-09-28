@@ -21,7 +21,7 @@ constexpr float EDGE_WIDTH = 8;
 
 struct Port {
     nodeid_t nodeid = (nodeid_t)-1;
-    portid_t portid;
+    portid_t portid = (portid_t)-1;
 };
 
 // Agent in an interaction net
@@ -47,7 +47,7 @@ struct Node {
     size_t get_index() const { return index; }
     Node& set_index(size_t index) {
         symbol = (symbolid_t)-1;
-        index = index;
+        this->index = index;
         return *this;
     }
     static Node make_index(size_t index) {
@@ -76,7 +76,11 @@ public:
     SparseVector<Node> nodes;
 
     nodeid_t add_node(Vector2 position, float angle, symbolid_t symbol);
+    nodeid_t add_node(Vector2 position, Vector2 velocity, float angle, float rotation, symbolid_t symbol);
     void add_edge(Port from, Port to);
+
+    Port&       get_port(const Port &port);
+    const Port& get_port(const Port &port) const;
 };
 
 Vector2 port_position(Port port, const Net &net);

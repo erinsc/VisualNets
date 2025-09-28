@@ -4,11 +4,20 @@ nodeid_t Net::add_node(Vector2 position, float angle, symbolid_t symbol) {
     portid_t ports = symbols[symbol].ports;
     return nodes.push(Node(position, {0, 0}, angle, 0, ports, symbol));
 }
-void Net::add_edge(Port from, Port to) {
-    nodes[from.nodeid].ports[from.portid] = to;
-    nodes[to.nodeid].ports[to.portid] = from;
+nodeid_t Net::add_node(Vector2 position, Vector2 velocity, float angle, float rotation, symbolid_t symbol) {
+    portid_t ports = symbols[symbol].ports;
+    return nodes.push(Node(position, velocity, angle, rotation, ports, symbol));
 }
-
+void Net::add_edge(Port from, Port to) {
+    get_port(from) = to;
+    get_port(to) = from;
+}
+Port& Net::get_port(const Port &port) {
+    return nodes.at(port.nodeid).ports.at(port.portid);
+}
+const Port& Net::get_port(const Port &port) const {
+    return nodes.at(port.nodeid).ports.at(port.portid);
+}
 Vector2 port_position(Port port, const Net &net) {
     const Node &node = net.nodes.at(port.nodeid);
     portid_t ports = net.symbols[node.symbol].ports;

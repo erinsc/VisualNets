@@ -74,7 +74,7 @@ void Renderer::draw_net(const Net &net) const {
             if (port.nodeid > id)
                 continue;
 
-            const Port &other = net.nodes[port.nodeid].ports[port.portid];
+            const Port &other = net.get_port(port);
 
             if (port.nodeid == id and other.portid > port.portid)
                 continue;
