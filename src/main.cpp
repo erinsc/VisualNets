@@ -1,6 +1,7 @@
-#include "lambda_net.h"
+#include "net.h"
 #include "renderer.h"
 #include "reducer.h"
+#include "lambdanets/parser.h"
 
 int main() {
     int display = GetCurrentMonitor();
@@ -10,88 +11,80 @@ int main() {
 
     SetTargetFPS(60);
 
+    bool simulate = true;
+    bool reduce = false;
+
     Net net;
     Renderer renderer(screensize);
     Reducer reducer;
 
-    net.symbols.emplace_back(SKYBLUE, 1, L'e');
-    net.symbols.emplace_back(GREEN, 3, L'g');
-    net.symbols.emplace_back(RED, 3, L'd');
+    net.symbols.emplace_back(GRAY, 1, " ");
+    net.symbols.emplace_back(ORANGE, 3, "A");
+    net.symbols.emplace_back(GREEN, 3, "G");
+    net.symbols.emplace_back(RED, 3, "D");
+    net.symbols.emplace_back(SKYBLUE, 1, "E");
+    net.symbols.emplace_back(YELLOW, 3, "L");
 
-    Reduction BlueBlue =   {false};
-    Reduction BlueGreen =  {false,         (symbolid_t)0, (symbolid_t)0};
-    Reduction BlueRed =    {false,         (symbolid_t)0, (symbolid_t)0};
-    Reduction GreenGreen = {(portid_t)1,   (portid_t)2,
-                            false,
-                            (portid_t)2,   (portid_t)1};
-    Reduction RedRed =     {(portid_t)1,   (portid_t)2,
-                            false,
-                            (portid_t)1,   (portid_t)2};
-    Reduction GreenRed =   {(symbolid_t)1, (portid_t)1, (portid_t)2,
-                            (symbolid_t)1, (portid_t)3, (portid_t)4,
-                            false,
-                            (symbolid_t)2, (portid_t)1, (portid_t)3,
-                            (symbolid_t)2, (portid_t)2, (portid_t)4};
+    Reduction DD = {{(portid_t)1, (portid_t)2},
+                    {(portid_t)1, (portid_t)2}};
+    Reduction DA = {{(symbolid_t)Alpha, (portid_t)1, (portid_t)2,
+                     (symbolid_t)Alpha, (portid_t)3, (portid_t)4},
+                    {(symbolid_t)Delta, (portid_t)1, (portid_t)3,
+                     (symbolid_t)Delta, (portid_t)2, (portid_t)4}};
+    Reduction DL = {{(symbolid_t)Lambda,(portid_t)1, (portid_t)2,
+                     (symbolid_t)Lambda,(portid_t)3, (portid_t)4},
+                    {(symbolid_t)Delta, (portid_t)1, (portid_t)3,
+                     (symbolid_t)Delta, (portid_t)2, (portid_t)4}};
+    Reduction DG = {{(symbolid_t)Gamma, (portid_t)1, (portid_t)2,
+                     (symbolid_t)Gamma, (portid_t)3, (portid_t)4},
+                    {(symbolid_t)Delta, (portid_t)1, (portid_t)3,
+                     (symbolid_t)Delta, (portid_t)2, (portid_t)4}};
+    Reduction AG = {{(symbolid_t)Gamma, (portid_t)1, (portid_t)2,
+                     (symbolid_t)Gamma, (portid_t)3, (portid_t)4},
+                    {(symbolid_t)Delta, (portid_t)1, (portid_t)3,
+                     (symbolid_t)Delta, (portid_t)2, (portid_t)4}};
+    Reduction LG = {{(portid_t)1, (symbolid_t)Gamma, (symbolid_t)Gamma,
+                     (portid_t)2, (portid_t)3, (portid_t)1},
+                    {(portid_t)2, (portid_t)3}};
+    Reduction GG = {{(portid_t)1, (portid_t)2},
+                    {(portid_t)1, (portid_t)2}};
+    Reduction DE = {{(symbolid_t)Epsilon, (symbolid_t)Epsilon},{}};
+    Reduction AE = {{(symbolid_t)Epsilon, (symbolid_t)Epsilon},{}};
+    Reduction LE = {{(symbolid_t)Epsilon, (symbolid_t)Epsilon},{}};
+    Reduction GE = {{(symbolid_t)Epsilon, (symbolid_t)Epsilon},{}};
+    Reduction EE = {{},{}};
 
-    reducer.register_rule({0,0}, BlueBlue);
-    reducer.register_rule({0,1}, BlueGreen);
-    reducer.register_rule({0,2}, BlueRed);
-    reducer.register_rule({1,1}, GreenGreen);
-    reducer.register_rule({1,2}, GreenRed);
-    reducer.register_rule({2,2}, RedRed);
+    reducer.register_rule({Delta,Delta},    DD);
+    reducer.register_rule({Delta,Alpha},    DA);
+    reducer.register_rule({Delta,Lambda},   DL);
+    reducer.register_rule({Delta,Gamma},    DG);
+    reducer.register_rule({Alpha,Gamma},    AG);
+    reducer.register_rule({Lambda,Gamma},   LG);
+    reducer.register_rule({Gamma,Gamma},    GG);
+    reducer.register_rule({Delta,Epsilon},  DE);
+    reducer.register_rule({Alpha,Epsilon},  AE);
+    reducer.register_rule({Lambda,Epsilon}, LE);
+    reducer.register_rule({Gamma,Epsilon},  GE);
+    reducer.register_rule({Epsilon,Epsilon},EE);
 
-    /*// INFINITE THINGY
-    net.add_node({500, 501}, 0, 0);
-    net.add_node({501, 500}, 0, 0);
-    net.add_node({502, 500}, 0, 2);
-    net.add_node({503, 500}, 0, 1);
+    term_map tm = {};
 
-    net.add_edge((Port){2, 0}, (Port){3, 0});
-    net.add_edge((Port){0, 0}, (Port){2, 1});
-    net.add_edge((Port){1, 0}, (Port){3, 2});
-    net.add_edge((Port){3, 1}, (Port){2, 2});
-    */
-    // Y FORK
-    net.add_node({500, 501}, 0, 0);
-    net.add_node({501, 500}, 0, 0);
-    net.add_node({502, 500}, 0, 0);
-    net.add_node({503, 500}, 0, 2);
+    //std::string s = "(\\n.n (\\x.(\\tf.f)) (\\tf.t))(\\xf.f(f(f(f(f(fx))))))";
+    std::string s = "(\\fx.f(fx))(\\x.xx)";
+    nodeid_t eps = net.add_node({0,0},0,Root);
 
-    net.add_edge((Port){0, 0}, (Port){3, 0});
-    net.add_edge((Port){1, 0}, (Port){3, 1});
-    net.add_edge((Port){2, 0}, (Port){3, 2});
+    Port tree = parse_term(s, tm, net);
+    net.nodes[tree.nodeid].ports[tree.portid] = {(nodeid_t)-1, (portid_t)-1};
 
-    // X FORK
-    net.add_node({500, 501}, 0, 0);
-    net.add_node({501, 500}, 0, 0);
-    net.add_node({502, 500}, 0, 2);
-    net.add_node({503, 500}, 0, 1);
-    net.add_node({504, 500}, 0, 0);
-    net.add_node({505, 500}, 0, 0);
+    net.add_edge(tree, {eps, 0});
 
-    net.add_edge((Port){4, 0}, (Port){6, 1});
-    net.add_edge((Port){5, 0}, (Port){6, 2});
-    net.add_edge((Port){7, 0}, (Port){6, 0});
-    net.add_edge((Port){7, 2}, (Port){8, 0});
-    net.add_edge((Port){7, 1}, (Port){9, 0});
-
-    // LOOP1
-    net.add_node({500, 501}, 0, 0);
-    net.add_node({501, 500}, 0, 2);
-
-    net.add_edge((Port){10, 0}, (Port){11, 0});
-    net.add_edge((Port){11, 1}, (Port){11, 2});
-
-    // LOOP2
-    net.add_node({500, 501}, 0, 2);
-    net.add_node({501, 500}, 0, 2);
-
-    net.add_edge((Port){12, 0}, (Port){13, 0});
-    net.add_edge((Port){12, 1}, (Port){12, 2});
-    net.add_edge((Port){13, 1}, (Port){13, 2});
+    auto it = net.nodes.begin();
+    net.nodes.at(*(it)).position += {0,1};
+    net.nodes.at(*(++it)).position += {1,0};
 
     while (!WindowShouldClose()) {
-        renderer.step_camera();
+        simulate ^= IsKeyPressed(KEY_ONE);
+        reduce ^= IsKeyPressed(KEY_TWO);
 
         BeginDrawing();
         BeginMode2D(renderer.camera);
@@ -102,19 +95,15 @@ int main() {
         EndMode2D();
         EndDrawing();
 
-        renderer.step_net(net);
+        if (simulate)
+            renderer.step_net(net);
+
+        renderer.step_camera();
         renderer.move_node(net);
 
-        if (IsKeyPressed(KEY_SPACE)) {
-            for (nodeid_t id : net.nodes) {
-                nodeid_t otherid = net.nodes.at(id).ports[0].nodeid;
-                const Node &other = net.nodes.at(otherid);
-                if (other.ports[0].nodeid == id) {
-                    reducer.reduce(id, otherid, net);
-                    break;
-                }
-
-            }
-        }
+        renderer.push_mult = reduce ? 8 : 1 ;
+        float distance = simulate ? NODE_RADIUS * 2 : -1;
+        if (reduce)
+            reducer.reduce_all(distance, net);
     }
 }

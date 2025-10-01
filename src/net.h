@@ -17,7 +17,10 @@ constexpr float NODE_RADIUS = 32;
 constexpr float NODE_MASS = NODE_RADIUS * NODE_RADIUS;
 constexpr float NODE_INERTIA = NODE_MASS * NODE_RADIUS * NODE_RADIUS / 4;
 
-constexpr float EDGE_WIDTH = 8;
+constexpr float EDGE_WIDTH = NODE_RADIUS / 4;
+
+constexpr float INFLUENCE_RADIUS = NODE_RADIUS * 8;
+constexpr float PUSH_FORCE = NODE_RADIUS;
 
 struct Port {
     nodeid_t nodeid = (nodeid_t)-1;
@@ -53,7 +56,6 @@ struct Node {
     static Node make_index(size_t index) {
         return Node(index, (symbolid_t)-1);
     }
-
     Node() {} // TODO: Get rid of this
 private:
     // Constructor for the ::make_index function
@@ -64,10 +66,14 @@ private:
 struct Symbol {
     Color color;
     portid_t ports; // Number of ports including main port
-    char character;
+    const char *text;
+    Vector2 text_size;
 
-    Symbol(Color color, portid_t ports, char character)
-    : color(color), ports(ports), character(character) {}
+    Symbol(Color color, portid_t ports, const char *text)
+    : color(color), ports(ports), text(text) {
+        Font font = GetFontDefault();
+        text_size = MeasureTextEx(font, text, NODE_RADIUS, 0) / 2;
+    }
 };
 
 class Net {

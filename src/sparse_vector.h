@@ -29,7 +29,7 @@ class SparseVector {
     std::vector<T> data;
 public:
     SparseVector() : size_m(0), stack_index(0), data(0) {}
-    SparseVector(size_t capacity) : size_m(0), stack_index(0), data(0) {
+    explicit SparseVector(size_t capacity) : size_m(0), stack_index(0), data(0) {
         for (size_t i = 0; i < capacity; ++i) {
             data.push_back(T::make_index(i+1));
         }

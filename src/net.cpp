@@ -1,4 +1,4 @@
-#include "lambda_net.h"
+#include "net.h"
 
 nodeid_t Net::add_node(Vector2 position, float angle, symbolid_t symbol) {
     portid_t ports = symbols[symbol].ports;
@@ -23,12 +23,9 @@ Vector2 port_position(Port port, const Net &net) {
     portid_t ports = net.symbols[node.symbol].ports;
 
     Vector2 offset;
-    if (ports == 1)
-        offset = {CRC_TRG_RATIO, 0};
-    else if (port.portid == 0)
-        offset = {1, 0};
-    else
-        offset = {-0.5f, 1 - 2.f * port.portid / ports};
+    if (ports == 1)            offset = {CRC_TRG_RATIO, 0};
+    else if (port.portid == 0) offset = {1, 0};
+    else                       offset = {-0.5f, 2.f * port.portid / ports - 1};
 
     return Vector2Rotate(offset, node.angle) * NODE_RADIUS + node.position;
 }
